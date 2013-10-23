@@ -1,10 +1,12 @@
-import sys, os
+import os
 from PyQt4 import QtCore, QtGui, QtSql, uic
 from dbConnection import dbErr
 import function
 
-class order(QtGui.QWidget):
+
+class Order(QtGui.QWidget):
     update_data = QtCore.pyqtSignal()
+
     def __init__(self, id, parent=None):
         def connections():
             self.discount.textEdited.connect(self.data_edited)
@@ -62,7 +64,7 @@ class order(QtGui.QWidget):
                 self.load_addresses(id)
                 self.load_items(id)
             else:
-                text = "No order could be found for %s"% id
+                text = "No order could be found for %s" % id
                 QtGui.QMessageBox.critical(None, "No Order", text)
                 self.close()
         else:
@@ -334,16 +336,19 @@ class order(QtGui.QWidget):
     
     def order_finished(self):
         id = self.order_id.text()
-        data = ("Update orders_status set processing='0', finished = '-1'"
-                "where oid={0}").format(id)
-        qry = QtSql.QSqlQuery()
-        if qry.exec_(data):
-            text = "{0} was marked as finished".format(id)
-            QtGui.QMessageBox.information(None, "Finished", text)
-            self.close()
-            self.update_data.emit()
-        else:
-            dbErr(qry)
+        confirm = QtGui.QMessageBox.question(self, "Confirm Finished", "Are you sure you want to finish order %s?" % id,
+                                             "No", "Yes", defaultButtonNumber=1, escapeButtonNumber=0)
+        if confirm == 1:
+            data = ("Update orders_status set processing='0', finished = '-1'"
+                    "where oid={0}").format(id)
+            qry = QtSql.QSqlQuery()
+            if qry.exec_(data):
+                text = "{0} was marked as finished".format(id)
+                QtGui.QMessageBox.information(None, "Finished", text)
+                self.close()
+                self.update_data.emit()
+            else:
+                dbErr(qry)
     
     def order_delete(self):
         id = self.order_id.text()

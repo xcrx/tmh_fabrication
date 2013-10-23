@@ -1,22 +1,25 @@
-import sys, os
+import os
 from PyQt4 import QtCore, QtGui, QtSql, uic
 
-class orders(QtGui.QWidget):
+
+class Orders(QtGui.QWidget):
     goToOrder = QtCore.pyqtSignal(int)
+
     def __init__(self, parent=None):
         def connections():
             self.filter.textEdited.connect(self.filter_)
-            self.table_orders.doubleClicked.connect(self.goToOrder_)
+            self.table_orders.doubleClicked.connect(self.go_to_order)
+            self.button_new_order.clicked.connect(self.new_order)
 
         QtGui.QWidget.__init__(self, parent)
-        uic.loadUi(os.path.split( __file__ )[0] + '/ui/orders.ui', self)
+        uic.loadUi(os.path.split(__file__)[0] + '/ui/orders.ui', self)
         connections()
         self.load_orders()
         
-    def load_orders(self, pos=0):
+    def load_orders(self):
         old_mod = self.table_orders.model() 
         mod = QtSql.QSqlQueryModel()
-        if old_mod != None:
+        if old_mod is not None:
             pos = self.table_orders.currentIndex()
         else:
             pos = mod.index(0, 0)
@@ -32,11 +35,14 @@ class orders(QtGui.QWidget):
         for row in range(rows):
             hide = True
             for col in range(cols):
-                if text.toLower() in mod.data(mod.index(row,col)).toString().toLower():
+                if text.toLower() in mod.data(mod.index(row, col)).toString().toLower():
                     hide = False
             self.table_orders.setRowHidden(row, hide)
-            
-    def goToOrder_(self, index):
+
+    def new_order(self):
+        pass
+
+    def go_to_order(self, index):
         mod = index.model()
         row = index.row()
         col = mod.columnCount()-1
