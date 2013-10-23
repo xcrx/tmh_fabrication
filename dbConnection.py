@@ -17,10 +17,10 @@ def defaultConnection():
         return False
 
 
-def dbErr(qry):
-    '''This error is used extensively.
-    '''
-    if qry == None:
+def dbErr(qry=None):
+    """This error is used extensively.
+    """
+    if qry is None:
         QtGui.QMessageBox.critical(None, "Database Error", "An unknown error occurred")
     else:
         QtGui.QMessageBox.critical(None, "Database Error", qry.lastError().text())
