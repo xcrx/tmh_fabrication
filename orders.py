@@ -1,4 +1,5 @@
 import os
+import function
 from PyQt4 import QtCore, QtGui, QtSql, uic
 
 
@@ -40,7 +41,10 @@ class Orders(QtGui.QWidget):
             self.table_orders.setRowHidden(row, hide)
 
     def new_order(self):
-        pass
+        new_order = function.NewOrder()
+        order_id = None
+        while not order_id:
+            order_id = new_order.get_data()
 
     def go_to_order(self, index):
         mod = index.model()
