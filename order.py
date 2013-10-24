@@ -173,10 +173,12 @@ class Order(QtGui.QWidget):
             dbErr(qry)
 
     def new_address_(self):
-        self.new_address = function.NewAddress(self)
+        new_address = function.NewAddress(self)
         address = False
         while not address:
-            address = self.new_address.get_data()
+            address = new_address.get_data()
+        if address == "Cancel":
+            return False
         qry = QtSql.QSqlQuery()
         data = ("Insert into customer_addresses (id, cid, address1, address2, city, state, zip) Values((select max(id) "
                 "from customer_addresses as s where cid = '{0}')+1, '{0}', '{1}', '{2}', '{3}', '{4}', '{5}')"

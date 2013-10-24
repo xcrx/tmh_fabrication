@@ -1,5 +1,6 @@
 from PyQt4 import QtGui, QtCore, uic
 import os
+import us
 
 class lineCalendar(QtGui.QLineEdit):
     '''This is a lineEdit object with a pop-up calendar for easier editing.
@@ -50,28 +51,42 @@ class lineCalendar(QtGui.QLineEdit):
         self.cal.hide()
 
 
+def load_states():
+        states = []
+        for state in us.STATES:
+            states.append(state.abbr)
+        comp = QtGui.QCompleter(states)
+        comp.setCaseSensitivity(0)
+        return comp
+
+
 class NewAddress(QtGui.QDialog):
     def __init__(self, cid, parent=None):
         QtGui.QDialog.__init__(self, parent)
         uic.loadUi(os.path.split( __file__ )[0] + '/ui/new_address.ui', self)
+        state_comp = load_states()
+        self.state.setCompleter(state_comp)
         self.cid = cid
         self.button_cancel.clicked.connect(self.reject)
         self.button_accept.clicked.connect(self.accept)
 
     def get_data(self):
-        self.exec_()
-        address = [self.address1.text(), self.address2.text(), self.city.text(), self.state.text(), self.zipcode.text()]
-        if address[0] != "":
-            if address[2] != "":
-                if address[3] != "":
-                    if address[4] != "":
-                        return address
+        ok = self.exec_()
+        if ok:
+            address = [self.address1.text(), self.address2.text(), self.city.text(), self.state.text(), self.zipcode.text()]
+            if address[0] != "":
+                if address[2] != "":
+                    if address[3] != "":
+                        if address[4] != "":
+                            return address
+                        else:
+                            QtGui.QMessageBox.critical(None, "Missing Data", "Zip Code Required")
                     else:
-                        QtGui.QMessageBox.critical(None, "Missing Data", "Zip Code Required")
+                        QtGui.QMessageBox.critical(None, "Missing Data", "State Required")
                 else:
-                    QtGui.QMessageBox.critical(None, "Missing Data", "State Required")
+                    QtGui.QMessageBox.critical(None, "Missing Data", "City Required")
             else:
-                QtGui.QMessageBox.critical(None, "Missing Data", "City Required")
+                QtGui.QMessageBox.critical(None, "Missing Data", "Street Address Required")
+            return False
         else:
-            QtGui.QMessageBox.critical(None, "Missing Data", "Street Address Required")
-        return False
+            return "Cancel"
