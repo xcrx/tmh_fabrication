@@ -51,6 +51,7 @@ class lineCalendar(QtGui.QLineEdit):
             self.editingFinished.emit()
         self.cal.hide()
 
+
 #TODO: Create similar to lookup city and state by zip
 def load_states():
     states = []
@@ -88,120 +89,6 @@ def get_address(cid, aid):
         else:
             dbErr(qry)
             return False
-
-
-class NewOrder(QtGui.QDialog):
-    def __init__(self, parent=None):
-        def connections():
-            self.button_cancel.clicked.connect(self.reject)
-            self.button_new_order.clicked.connect(self.accept)
-            self.customer.currentIndexChanged.connect(self.change_customer)
-            self.s_address1.currentIndexChanged["QString"].connect(self.change_address)
-            self.b_address1.currentIndexChanged["QString"].connect(self.change_address)
-
-        QtGui.QDialog.__init__(self, parent)
-        uic.loadUi(os.path.split(__file__)[0] + '/ui/new_order.ui', self)
-        ok = self.get_customers()
-        if not ok:
-            self.close()
-
-        connections()
-
-    def get_customers(self):
-        qry = QtSql.QSqlQuery()
-        data = "Select name, id from customers"
-        if qry.exec_(data):
-            mod = QtSql.QSqlQueryModel()
-            mod.setQuery(qry)
-            self.customer.setModel(mod)
-            return True
-        else:
-            dbErr(qry)
-            QtGui.QMessageBox.critical(None, "Fatal Error", "Failed to load customers from database. Aborting!")
-            return False
-
-    def change_customer(self, index):
-        if index > 0:
-            self.tabs.setEnabled(True)
-        else:
-            self.tabs.setEnabled(False)
-
-        mod = self.customer.model()
-        self.customer = mod.data(mod.index(index, 1)).toString()
-        self.s_address1.clear()
-        self.b_address1.clear()
-        addresses = get_addresses(self.customer)
-        self.s_address1.addItems(addresses)
-        self.b_address1.addItems(addresses)
-        self.s_address1.setCurrentIndex(0)
-        self.b_address1.setCurrentIndex(0)
-
-    def change_address(self, address):
-        sender = self.sender()
-        if address == "":
-            return False
-        if address == "Add New Address...":
-            stat = self.new_address_()
-            if not stat:
-                return False
-            self.s_address1.clear()
-            self.b_address1.clear()
-            addresses = get_addresses(self.customer)
-            self.s_address1.addItems(addresses)
-            self.b_address1.addItems(addresses)
-            self.s_address1.setCurrentIndex(self.s_address1.findText(stat))
-            return
-        else:
-            qry = QtSql.QSqlQuery()
-            data = "Select id from customer_addresses where cid={0} and address1='{1}'".format(self.customer, address)
-            if qry.exec_(data):
-                if qry.first():
-                    aid = qry.value(0).toString()
-                else:
-                    QtGui.QMessageBox.critical(None, "Database Error", "Couldn't find address like %s" % address)
-                    return False
-            else:
-                dbErr(qry)
-                return False
-        address = get_address(self.customer, aid)
-        if sender.objectName() == "s_address1":
-            self.s_address2.setText(address[1])
-            self.s_city.setText(address[2])
-            self.s_state.setText(address[3])
-            self.s_zipcode.setText(address[4])
-        elif sender.objectName() == "b_address1":
-            self.b_address2.setText(address[1])
-            self.b_city.setText(address[2])
-            self.b_state.setText(address[3])
-            self.b_zipcode.setText(address[4])
-        else:
-            text = "A signal to change the address came from an unknown source. Aliens??"
-            QtGui.QMessageBox.critical(None, "Unknown Sender", text)
-            return False
-
-    def new_address_(self):
-        new_address = NewAddress(self)
-        address = False
-        while not address:
-            address = new_address.get_data()
-        if address == "Cancel":
-            return False
-        qry = QtSql.QSqlQuery()
-        data = ("Insert into customer_addresses (id, cid, address1, address2, city, state, zip) Values((select max(id) "
-                "from customer_addresses as s where cid = '{0}')+1, '{0}', '{1}', '{2}', '{3}', '{4}', '{5}')"
-                ).format(self.customer, *address)
-        if qry.exec_(data):
-            return address[0]
-        else:
-            dbErr(qry)
-            return False
-
-    def get_data(self):
-        ok = self.exec_()
-        if ok:
-            return True
-        else:
-            return "Cancel"
 
 
 class NewAddress(QtGui.QDialog):

@@ -443,4 +443,6 @@ class Order(QtGui.QWidget):
             
     def closeEvent(self, event):
         self.parent().close()
+        self.toolbar1.close()
+        del self.toolbar1
         event.accept()

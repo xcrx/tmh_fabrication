@@ -53,8 +53,8 @@ class Main(QtGui.QMainWindow):
             self.orders_widget = self.orders.widget()
             self.orders_widget.goToOrder.connect(self.view_order)
     
-    def view_order(self, id):
-        self.order, exit = self.new_sub_window(Order, args=id)
+    def view_order(self, oid):
+        self.order, exit = self.new_sub_window(Order, args=oid)
         if exit:
             self.order_widget = self.order.widget()
             self.order_widget.update_data.connect(self.orders_widget.load_orders)
