@@ -3,48 +3,57 @@ import os
 import us
 from dbConnection import dbErr
 
-class lineCalendar(QtGui.QLineEdit):
-    '''This is a lineEdit object with a pop-up calendar for easier editing.
-    '''
-    def __init__(self, parent=None):            
+
+class LineCalendar(QtGui.QLineEdit):
+    """
+    This is a lineEdit object with a pop-up calendar for easier editing.
+    """
+    cal = None
+
+    def __init__(self, parent=None):
         QtGui.QLineEdit.__init__(self, parent)
         self.setInputMask('####-##-##')  # Holds the field to a date format.
         self.setText('0000-00-00')
         self.mousePressEvent = self.calendar
-        self.setupCalendar()
+        self.setup_calendar()
         
-    def setupCalendar(self):
-        '''This is the widget for the pop-up
-        '''
+    def setup_calendar(self):
+        """
+        This is the widget for the pop-up
+        """
         self.cal = QtGui.QCalendarWidget()
         self.cal.setWindowFlags(QtCore.Qt.Popup)
         self.cal.hide()
-        self.cal.activated.connect(self.setDate)
+        self.cal.activated.connect(self.set_date)
         
     def calendar(self, event):
-        '''Show/Hide the pop-up
-        '''
+        """
+        Show/Hide the pop-up
+        """
         if self.cal.isVisible():
             self.cal.hide()
         else:
-            self.calPos()
+            self.cal_pos()
             self.cal.show()
+        event.accept()
     
-    def calPos(self):
-        '''Finds the position of the lineEdit and opens the 
+    def cal_pos(self):
+        """
+        Finds the position of the lineEdit and opens the
         popup underneath it.
-        '''
-        lePos = self.mapToGlobal(QtCore.QPoint(0,0))
-        leH = self.height()
+        """
+        le_pos = self.mapToGlobal(QtCore.QPoint(0, 0))
+        le_h = self.height()
         pos = QtCore.QPoint()
-        pos.setX(lePos.x())
-        pos.setY(lePos.y()+leH)
+        pos.setX(le_pos.x())
+        pos.setY(le_pos.y()+le_h)
         self.cal.move(pos)
         
-    def setDate(self, date):
-        '''Takes the date from the pop-up and converts it to a 
+    def set_date(self, date):
+        """
+        Takes the date from the pop-up and converts it to a
         string and sets to the lineEdit
-        '''
+        """
         if not self.isReadOnly():
             self.setText(date.toString("yyyy-MM-dd"))
             self.textEdited.emit(date.toString("yyyy-MM-dd"))
@@ -64,31 +73,45 @@ def load_states():
 
 def get_addresses(cid):
     qry = QtSql.QSqlQuery()
-    data = "Select address1 from customer_addresses where cid=%s" % cid
+    data = "Select address1, id from customer_addresses where cid=%s" % cid
     addresses = []
     if qry.exec_(data):
         while qry.next():
-            addresses.append(qry.value(0).toString())
-        addresses.append("Add New Address...")
+            addresses.append([qry.value(0).toString(), qry.value(1).toString()])
+        addresses.append(["Add New Address...", "99"])
         return addresses
     else:
         dbErr(qry)
         return False
 
 
-def get_address(cid, aid):
-        qry = QtSql.QSqlQuery()
-        select = ("Select address1, address2, city, state, zip from "
-                  "customer_addresses where cid = %s and id = %s" % (cid, aid))
-        if qry.exec_(select):
-            qry.first()
-            address = []
-            for i in range(5):
-                address.append(qry.value(i).toString())
-            return address
+def get_part_id(part_num):
+    qry = QtSql.QSqlQuery()
+    data = "Select id from parts where partt = '%s'" % part_num
+    if qry.exec_(data):
+        if qry.first():
+            return qry.value(0).toString()
         else:
-            dbErr(qry)
-            return False
+            QtGui.QMessageBox.critical(None, "Not Found", "Could not find a part related to %s" % part_num)
+            return None
+    else:
+        dbErr(qry)
+        return None
+
+
+def get_address(cid, street):
+    qry = QtSql.QSqlQuery()
+    select = ("Select address1, address2, city, state, zip from customer_addresses "
+              "where cid = %s and address1 = '%s'" % (cid, street))
+    if qry.exec_(select):
+        qry.first()
+        address = []
+        for i in range(5):
+            address.append(qry.value(i).toString())
+        return address
+    else:
+        dbErr(qry)
+        return []
 
 
 class NewAddress(QtGui.QDialog):

@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui, QtSql, uic
-from function import lineCalendar, get_address, get_addresses, NewAddress
+from function import LineCalendar, get_address, get_addresses, NewAddress
 from dbConnection import dbErr
 import os
 
@@ -18,12 +18,12 @@ class NewOrder(QtGui.QDialog):
 
         QtGui.QDialog.__init__(self, parent)
         uic.loadUi(os.path.split(__file__)[0] + '/ui/new_order.ui', self)
-        self.due_date = lineCalendar()
+        self.due_date = LineCalendar()
         self.due_date.setObjectName("due_date")
-        self.ordered_date = lineCalendar()
+        self.ordered_date = LineCalendar()
         self.ordered_date.setObjectName("ordered_date")
         self.order_layout.addWidget(self.ordered_date, 1, 1)
-        self.ordered_date.setDate(QtCore.QDateTime.currentDateTime())
+        self.ordered_date.set_date(QtCore.QDateTime.currentDateTime())
         self.order_layout.addWidget(self.due_date, 2, 1)
         priority = self.priority_slider.value()
         self.priority_digit.setText(str(priority))
@@ -77,19 +77,7 @@ class NewOrder(QtGui.QDialog):
             self.b_address1.addItems(addresses)
             self.s_address1.setCurrentIndex(self.s_address1.findText(stat))
             return
-        else:
-            qry = QtSql.QSqlQuery()
-            data = "Select id from customer_addresses where cid={0} and address1='{1}'".format(self.customer, address)
-            if qry.exec_(data):
-                if qry.first():
-                    aid = qry.value(0).toString()
-                else:
-                    QtGui.QMessageBox.critical(None, "Database Error", "Couldn't find address like %s" % address)
-                    return False
-            else:
-                dbErr(qry)
-                return False
-        address = get_address(self.customer, aid)
+        address = get_address(self.customer, address)
         if sender.objectName() == "s_address1":
             self.s_address2.setText(address[1])
             self.s_city.setText(address[2])

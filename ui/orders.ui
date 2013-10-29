@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1039</width>
+    <width>817</width>
     <height>621</height>
    </rect>
   </property>
@@ -46,6 +46,12 @@
    </item>
    <item row="0" column="2">
     <widget class="QLineEdit" name="filter">
+     <property name="minimumSize">
+      <size>
+       <width>150</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="maximumSize">
       <size>
        <width>150</width>

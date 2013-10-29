@@ -5,9 +5,12 @@ import function
 
 
 class Order(QtGui.QWidget):
-    update_data = QtCore.pyqtSignal()
+    goToPart = QtCore.pyqtSignal([str])
+    toolbar1 = None
+    cid = str
 
-    def __init__(self, id, parent=None):
+    def __init__(self, oid, parent=None):
+
         def connections():
             self.discount.textEdited.connect(self.data_edited)
             self.due_date.textEdited.connect(self.data_edited)
@@ -23,48 +26,48 @@ class Order(QtGui.QWidget):
 
         QtGui.QWidget.__init__(self, parent)
         uic.loadUi(os.path.split(__file__)[0] + '/ui/order.ui', self)
-        self.due_date = function.lineCalendar()
+        self.due_date = function.LineCalendar()
         self.due_date.setObjectName("due_date")
         self.order_layout.addWidget(self.due_date, 4, 1)
-        self.actions()
+        self.load_actions()
         connections()
-        self.load_order(id)
+        self.load_order(oid)
         title = "{0} - {1}".format(self.customer.text(), self.order_id.text())
         self.setWindowTitle(title)
         self.parts_completer()
     
-    def actions(self):
-        self.toolbar1 = QtGui.QToolBar('Order')
+    def load_actions(self):
+        self.toolbar1 = QtGui.QToolBar("Order")
         self.toolbar1.addActions([self.action_invoice, self.action_list,
                                   self.action_delete, self.action_finished]
                                  )
         self.parent().addToolBar(self.toolbar1)
     
-    def load_order(self, id):
+    def load_order(self, oid):
         qry = QtSql.QSqlQuery()
-        select = "Select * from view_order where Id = %s"% id
+        select = "Select * from view_order where Id = %s"% oid
         if qry.exec_(select):
             if qry.first():
                 rec = qry.record()
-                vals = []
+                values = []
                 for i in range(rec.count()):
-                    vals.append(qry.value(i).toString())
+                    values.append(qry.value(i).toString())
                     
-                self.order_id.setText(vals[0])
-                self.po_number.setText(vals[1])
-                self.ordered_date.setText(vals[2])
-                self.due_date.setText(vals[3])
-                self.notes.setPlainText(vals[5])
-                self.discount.setText(vals[6])
-                self.customer.setText(vals[7])
-                if vals[4] == '0':
+                self.order_id.setText(values[0])
+                self.po_number.setText(values[1])
+                self.ordered_date.setText(values[2])
+                self.due_date.setText(values[3])
+                self.notes.setPlainText(values[5])
+                self.discount.setText(values[6])
+                self.customer.setText(values[7])
+                if values[4] == '0':
                     self.processing.setChecked(False)
                 else:
                     self.processing.setChecked(True)
-                self.load_addresses(id)
-                self.load_items(id)
+                self.load_addresses(oid)
+                self.load_items(oid)
             else:
-                text = "No order could be found for %s" % id
+                text = "No order could be found for %s" % oid
                 QtGui.QMessageBox.critical(None, "No Order", text)
                 self.close()
         else:
@@ -72,9 +75,9 @@ class Order(QtGui.QWidget):
             dbErr(qry)
             self.close()
             
-    def load_addresses(self, id):
+    def load_addresses(self, cid):
         qry = QtSql.QSqlQuery()
-        select = "Select cid, shipping, billing from orders where id = %s" % id
+        select = "Select cid, shipping, billing from orders where id = %s" % cid
         if qry.exec_(select):
             if qry.first():
                 self.cid = qry.value(0).toString()
@@ -86,16 +89,14 @@ class Order(QtGui.QWidget):
                 self.b_address1.currentIndexChanged['QString'].disconnect()
                 self.s_address1.clear()
                 self.b_address1.clear()
-                addresses = self.get_addresses(self.cid)
+                addresses = function.get_addresses(self.cid)
                 for address in addresses:
                     self.s_address1.addItem(address[0])
                     self.b_address1.addItem(address[0])
-                    if address[5] == shipping_id:
-                        shipping = address
-                    if address[5] == billing_id:
-                        billing = address
-                self.s_address1.addItem("Add New Item...")
-                self.b_address1.addItem("Add New Item...")
+                    if address[1] == shipping_id:
+                        shipping = function.get_address(self.cid, address[0])
+                    if address[1] == billing_id:
+                        billing = function.get_address(self.cid, address[0])
                 self.s_address1.setCurrentIndex(self.s_address1.findText(shipping[0]))
                 self.s_address2.setText(shipping[1])
                 self.s_city.setText(shipping[2])
@@ -110,25 +111,9 @@ class Order(QtGui.QWidget):
                 self.b_address1.currentIndexChanged['QString'].connect(self.change_address)
                 return True
             else:
-                text = "Couldn't find on order that matched %s" % id
+                text = "Couldn't find on order that matched %s" % cid
                 QtGui.QMessageBox.critical(None, "No Order", text)
                 return False
-        else:
-            dbErr(qry)
-            return False
-                
-    def get_addresses(self, cid):
-        qry = QtSql.QSqlQuery()
-        select = ("Select address1, address2, city, state, zip, id from "
-                  "customer_addresses where cid = {0}").format(cid)
-        if qry.exec_(select):
-            addresses = []
-            while qry.next():
-                address = []
-                for i in range(6):
-                    address.append(qry.value(i).toString())
-                addresses.append(address)
-            return addresses
         else:
             dbErr(qry)
             return False
@@ -137,7 +122,7 @@ class Order(QtGui.QWidget):
         if address == "":
             return False
         sender = self.sender().objectName()
-        if address == "Add New Item...":
+        if address == "Add New Address...":
             stat = self.new_address_()
             if not stat:
                 return False
@@ -204,7 +189,10 @@ class Order(QtGui.QWidget):
         mod = index.model()
         col = index.column()
         row = index.row()
-        if col == 1:
+        if col == 0:
+            pid = function.get_part_id(mod.data(mod.index(row, col)).toString())
+            self.goToPart.emit(pid)
+        elif col == 1:
             self.update_item_qty(mod.record(row))
         elif col == 2:
             self.update_item_status(mod.record(row))

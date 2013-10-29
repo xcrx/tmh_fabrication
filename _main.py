@@ -1,15 +1,20 @@
 import sys
 import os
+
 from PyQt4 import QtGui, QtCore, QtSql, uic
 from orders import Orders
 from order import Order
+from parts import Parts
+from part import Part
 from dbConnection import defaultConnection, dbErr
+#TODO: Implement QSettings
 
 
 class Main(QtGui.QMainWindow):
     def __init__(self, parent=None):
         def connections():
             self.action_orders.triggered.connect(self.view_orders)
+            self.action_parts.triggered.connect(self.view_parts)
             
         QtGui.QMainWindow.__init__(self, parent)
         uic.loadUi(os.path.split(__file__)[0] + '/ui/main.ui', self)
@@ -46,7 +51,7 @@ class Main(QtGui.QMainWindow):
             QtGui.QApplication.restoreOverrideCursor()
         return sub, stat
         
-####Subwindow definitions
+    ####Subwindow definitions
     def view_orders(self):
         self.orders, exit = self.new_sub_window(Orders)
         if exit:
@@ -57,7 +62,18 @@ class Main(QtGui.QMainWindow):
         self.order, exit = self.new_sub_window(Order, args=oid)
         if exit:
             self.order_widget = self.order.widget()
-            self.order_widget.update_data.connect(self.orders_widget.load_orders)
+            self.order_widget.goToPart.connect(self.view_part)
+
+    def view_parts(self):
+        self.parts, ok = self.new_sub_window(Parts)
+        if ok:
+            self.parts_widget = self.parts.widget()
+            self.parts_widget.goToPart.connect(self.view_part)
+
+    def view_part(self, pid):
+        self.part, ok = self.new_sub_window(Part, args=pid)
+        if ok:
+            self.part_widget = self.part.widget()
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
