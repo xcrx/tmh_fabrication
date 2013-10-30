@@ -1,8 +1,6 @@
-__author__ = 'rhanson'
 import os
 from PyQt4 import QtCore, QtGui, QtSql, uic
-from dbConnection import dbErr
-import function
+from dbConnection import db_err
 #TODO: Set up connections
 #TODO: Save edits
 
@@ -20,7 +18,7 @@ class Part(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         uic.loadUi(os.path.split(__file__)[0] + '/ui/part.ui', self)
 
-        if not self.load_part():
+        if not self.load_part:
             self.close()
         if not self.load_drawing():
             pass
@@ -34,6 +32,7 @@ class Part(QtGui.QWidget):
         title = "%s (%s)" % (self.part_number.text(), self.pid)
         self.setWindowTitle(title)
 
+    @property
     def load_part(self):
         qry = QtSql.QSqlQuery()
         data = "Select * from view_parts where `Part ID` = '%s'" % self.pid
@@ -54,7 +53,7 @@ class Part(QtGui.QWidget):
                 QtGui.QMessageBox.critical(None, "Not Found", "A part matching %s could not be found" % self.pid)
                 return False
         else:
-            dbErr(qry)
+            db_err(qry)
             return False
 
     #TODO: What do about drawings??
@@ -72,7 +71,7 @@ class Part(QtGui.QWidget):
             self.table_orders.resizeColumnsToContents()
             return True
         else:
-            dbErr(qry)
+            db_err(qry)
             return False
 
     def load_bom(self):
@@ -85,5 +84,5 @@ class Part(QtGui.QWidget):
             self.table_bom.resizeColumnsToContents()
             return True
         else:
-            dbErr(qry)
+            db_err(qry)
             return False

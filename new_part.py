@@ -1,7 +1,4 @@
 from PyQt4 import QtCore, QtGui, QtSql, uic
-from function import LineCalendar, get_address, get_addresses, NewAddress
-from dbConnection import dbErr
-import os
 
 
 class NewPart(QtGui.QDialog):

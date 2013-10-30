@@ -1,7 +1,7 @@
 from PyQt4 import QtGui, QtCore, QtSql, uic
 import os
 import us
-from dbConnection import dbErr
+from dbConnection import db_err
 
 
 class LineCalendar(QtGui.QLineEdit):
@@ -81,7 +81,7 @@ def get_addresses(cid):
         addresses.append(["Add New Address...", "99"])
         return addresses
     else:
-        dbErr(qry)
+        db_err(qry)
         return False
 
 
@@ -95,7 +95,7 @@ def get_part_id(part_num):
             QtGui.QMessageBox.critical(None, "Not Found", "Could not find a part related to %s" % part_num)
             return None
     else:
-        dbErr(qry)
+        db_err(qry)
         return None
 
 
@@ -110,7 +110,7 @@ def get_address(cid, street):
             address.append(qry.value(i).toString())
         return address
     else:
-        dbErr(qry)
+        db_err(qry)
         return []
 
 
@@ -127,7 +127,8 @@ class NewAddress(QtGui.QDialog):
     def get_data(self):
         ok = self.exec_()
         if ok:
-            address = [self.address1.text(), self.address2.text(), self.city.text(), self.state.text(), self.zipcode.text()]
+            address = [self.address1.text(), self.address2.text(), self.city.text(),
+                       self.state.text(), self.zipcode.text()]
             if address[0] != "":
                 if address[2] != "":
                     if address[3] != "":
@@ -144,3 +145,38 @@ class NewAddress(QtGui.QDialog):
             return False
         else:
             return "Cancel"
+
+
+class TMHSettings(QtCore.QSettings):
+    def __init__(self, form=1, scope=0, organization='TMH Fabrication', app='Inventory Control', parent=None):
+        QtCore.QSettings.__init__(self, form, scope, organization,  app, parent)
+
+    def read(self, key, value=None, group="Main"):
+        self.sync()
+        stat = self.status()
+        if stat == 0:
+            self.beginGroup(group)
+            data = self.value(key, value)
+            self.endGroup()
+            return data
+        elif stat == 1:
+            QtGui.QMessageBox.critical(None, "Access Error", "Could not read setting from %s" % self.organizationName())
+            return None
+        elif stat == 2:
+            QtGui.QMessageBox.critical(None, "Format Error", "INI file appears to be corrupt. :(")
+            return None
+
+    def write(self, key, value, group="Main"):
+        self.beginGroup(group)
+        self.setValue(key, value)
+        self.endGroup()
+        self.sync()
+        stat = self.status()
+        if stat == 0:
+            return True
+        elif stat == 1:
+            QtGui.QMessageBox.critical(None, "Access Error", "Could not write settings to %s" % self.organizationName())
+            return False
+        elif stat == 2:
+            QtGui.QMessageBox.critical(None, "Format Error", "INI file appears to be corrupt. :(")
+            return False

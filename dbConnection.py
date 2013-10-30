@@ -1,23 +1,26 @@
 from PyQt4 import QtCore, QtGui, QtSql
 
 
-def defaultConnection():
+def default_connection():
     QtSql.QSqlDatabase.database('qt_sql_default_connection').close()
     QtSql.QSqlDatabase.removeDatabase('qt_sql_default_connection')
     db = QtSql.QSqlDatabase.addDatabase("QMYSQL")
     db.setUserName('rhanson')
-    passwd, exit = QtGui.QInputDialog.getText(None, 'Enter Password', 'Password', 2)
-    db.setPassword(passwd)
-    db.setHostName('192.168.1.79')
-    db.setDatabaseName('tmh_fabrication')
-    if db.open():
-        return True
+    password, ok = QtGui.QInputDialog.getText(None, 'Enter Password', 'Password', 2)
+    if ok:
+        db.setPassword(password)
+        db.setHostName('192.168.1.79')
+        db.setDatabaseName('tmh_fabrication')
+        if db.open():
+            return True
+        else:
+            db_err(db)
+            return False
     else:
-        dbErr(db)
         return False
 
 
-def dbErr(qry=None):
+def db_err(qry=None):
     """This error is used extensively.
     """
     if qry is None:

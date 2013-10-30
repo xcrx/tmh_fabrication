@@ -1,6 +1,6 @@
 import os
 from PyQt4 import QtCore, QtGui, QtSql, uic
-from dbConnection import dbErr
+from dbConnection import db_err
 import function
 
 
@@ -45,7 +45,7 @@ class Order(QtGui.QWidget):
     
     def load_order(self, oid):
         qry = QtSql.QSqlQuery()
-        select = "Select * from view_order where Id = %s"% oid
+        select = "Select * from view_order where Id = %s" % oid
         if qry.exec_(select):
             if qry.first():
                 rec = qry.record()
@@ -72,7 +72,7 @@ class Order(QtGui.QWidget):
                 self.close()
         else:
             print select
-            dbErr(qry)
+            db_err(qry)
             self.close()
             
     def load_addresses(self, cid):
@@ -115,7 +115,7 @@ class Order(QtGui.QWidget):
                 QtGui.QMessageBox.critical(None, "No Order", text)
                 return False
         else:
-            dbErr(qry)
+            db_err(qry)
             return False
 
     def change_address(self, address):
@@ -130,6 +130,9 @@ class Order(QtGui.QWidget):
             if qry.exec_("Select max(id) from customer_addresses where cid ='%s'" % self.cid):
                 qry.first()
                 a_id = qry.value(0).toString()
+            else:
+                db_err(qry)
+                return False
         else:
             qry = QtSql.QSqlQuery()
             data = "Select id from customer_addresses where cid={0} and address1='{1}'".format(self.cid, address)
@@ -140,7 +143,7 @@ class Order(QtGui.QWidget):
                     QtGui.QMessageBox.critical(None, "Database Error", "Couldn't find address like %s" % address)
                     return False
             else:
-                dbErr(qry)
+                db_err(qry)
                 return False
 
         if sender == "s_address1":
@@ -155,7 +158,7 @@ class Order(QtGui.QWidget):
         if qry.exec_(data):
             self.load_addresses(self.order_id.text())
         else:
-            dbErr(qry)
+            db_err(qry)
 
     def new_address_(self):
         new_address = function.NewAddress(self)
@@ -171,19 +174,19 @@ class Order(QtGui.QWidget):
         if qry.exec_(data):
             return True
         else:
-            dbErr(qry)
+            db_err(qry)
             return False
 
-    def load_items(self, id):
+    def load_items(self, iid):
         qry = QtSql.QSqlQuery()
-        select = "Select * from view_items where `Order #` = %s" % id
+        select = "Select * from view_items where `Order #` = %s" % iid
         if qry.exec_(select):
             mod = QtSql.QSqlQueryModel()
             mod.setQuery(qry)
             self.table_items.setModel(mod)
             self.table_items.resizeColumnsToContents()
         else:
-            dbErr(qry)
+            db_err(qry)
 
     def item_functions(self, index):
         mod = index.model()
@@ -214,7 +217,7 @@ class Order(QtGui.QWidget):
             if qry.exec_(data):
                 self.load_items(oid)
             else:
-                dbErr(qry)
+                db_err(qry)
 
     def update_item_status(self, record):
         iid = record.value("id").toString()
@@ -227,7 +230,7 @@ class Order(QtGui.QWidget):
             if qry.exec_(data):
                 self.load_items(oid)
             else:
-                dbErr(qry)
+                db_err(qry)
 
     def update_item_stock(self, record):
         iid = record.value("id").toString()
@@ -244,13 +247,13 @@ class Order(QtGui.QWidget):
                     QtGui.QMessageBox.critical(None, "Error", "Could not find part related to %s" % iid)
                     return False
             else:
-                dbErr(qry)
+                db_err(qry)
                 return False
             data = "Update parts_detail set stock=%d where pid=%s" % (new_stock, pid)
             if qry.exec_(data):
                 self.load_items(oid)
             else:
-                dbErr(qry)
+                db_err(qry)
 
     def update_item_desc(self, record):
         iid = record.value("id").toString()
@@ -267,13 +270,13 @@ class Order(QtGui.QWidget):
                     QtGui.QMessageBox.critical(None, "Error", "Could not find part related to %s" % iid)
                     return False
             else:
-                dbErr(qry)
+                db_err(qry)
                 return False
             data = "Update parts set description='%s' where id=%s" % (new_desc, pid)
             if qry.exec_(data):
                 self.load_items(oid)
             else:
-                dbErr(qry)
+                db_err(qry)
 
     def update_item_material(self, record):
         iid = record.value("id").toString()
@@ -285,6 +288,9 @@ class Order(QtGui.QWidget):
             materials = []
             while qry.next():
                 materials.append(qry.value(0).toString())
+        else:
+            db_err(qry)
+            return False
         new_material, ok = QtGui.QInputDialog.getItem(None, "Material", "", materials)
         if ok and new_material != old_material:
             data = "Select pid from items where id=%s" % iid
@@ -295,7 +301,7 @@ class Order(QtGui.QWidget):
                     QtGui.QMessageBox.critical(None, "Error", "Could not find part related to %s" % iid)
                     return False
             else:
-                dbErr(qry)
+                db_err(qry)
                 return False
             data = "Select id from materials where name='%s'" % new_material
             if qry.exec_(data):
@@ -305,13 +311,13 @@ class Order(QtGui.QWidget):
                     QtGui.QMessageBox.critical(None, "Error", "Could not find material related to %s" % new_material)
                     return False
             else:
-                dbErr(qry)
+                db_err(qry)
                 return False
             data = "Update parts set mid=%s where id=%s" % (mid, pid)
             if qry.exec_(data):
                 self.load_items(oid)
             else:
-                dbErr(qry)
+                db_err(qry)
 
     def parts_completer(self):
         qry = QtSql.QSqlQuery()
@@ -325,20 +331,20 @@ class Order(QtGui.QWidget):
             self.part_number.setCompleter(comp)
     
     def order_finished(self):
-        id = self.order_id.text()
-        confirm = QtGui.QMessageBox.question(self, "Confirm Finished", "Are you sure you want to finish order %s?" % id,
+        oid = self.order_id.text()
+        confirm = QtGui.QMessageBox.question(self, "Confirm Finished", "Are you sure you want to finish order %s?" % oid,
                                              "No", "Yes", defaultButtonNumber=1, escapeButtonNumber=0)
         if confirm == 1:
             data = ("Update orders_status set processing='0', finished = '-1'"
-                    "where oid={0}").format(id)
+                    "where oid={0}").format(oid)
             qry = QtSql.QSqlQuery()
             if qry.exec_(data):
-                text = "{0} was marked as finished".format(id)
+                text = "{0} was marked as finished".format(oid)
                 QtGui.QMessageBox.information(None, "Finished", text)
                 self.close()
                 self.update_data.emit()
             else:
-                dbErr(qry)
+                db_err(qry)
     
     def order_delete(self):
         id = self.order_id.text()
@@ -353,7 +359,7 @@ class Order(QtGui.QWidget):
                 self.update_data.emit()
                 self.close()
             else:
-                dbErr(qry)
+                db_err(qry)
                 return False
         else:
             return False
@@ -374,13 +380,13 @@ class Order(QtGui.QWidget):
                         self.load_items(oid)
                     else:
                         self.part_number.setText("")
-                        dbErr(qry)
+                        db_err(qry)
                 else:
                     self.part_number.setText("")
             else:
                 QtGui.QMessageBox.critical(None, "Not Found", "Could not find part matching %s!" % part)
         else:
-            dbErr(qry)
+            db_err(qry)
 
     def set_processing(self):
         state = self.processing.checkState()
@@ -394,40 +400,41 @@ class Order(QtGui.QWidget):
         if qry.exec_(data):
             self.load_order(id)
         else:
-            dbErr(qry)
+            db_err(qry)
 
     def data_edited(self):
-        map = [["discount", "orders_discount", "cost", "oid"],
+        data_map = [["discount", "orders_discount", "cost", "oid"],
                ["due_date", "orders", "ddate", "id"],
                ["po_number", "orders", "po", "id"], ]
         
-        id = self.order_id.text()
+        oid = self.order_id.text()
         
         data = self.sender().objectName()
         key = None
-        for value in map:
+        for value in data_map:
             if value[0] == data:
                 key = value
-        if key != None:
+        if key is not None:
             text = self.sender().text()
             qry = QtSql.QSqlQuery()
             update = ("Update {0} set {1} = '{2}' where {3} = '{4}'"
-                      ).format(key[1], key[2], text, key[3], id)
+                      ).format(key[1], key[2], text, key[3], oid)
             if qry.exec_(update):
-                self.load_order(id)
+                self.load_order(oid)
             else:
-                dbErr(qry)
+                db_err(qry)
     
     def note_edited(self, event):
-        id = self.order_id.text()
+        oid = self.order_id.text()
         text = self.notes.toPlainText()
         qry = QtSql.QSqlQuery()
         update = ("Update orders_note set notes = '{0}' where oid = {1}"
-                  ).format(text, id)
+                  ).format(text, oid)
         if qry.exec_(update):
-            self.load_order(id)
+            self.load_order(oid)
         else:
-            dbErr(qry)
+            db_err(qry)
+        event.accept()
             
     def closeEvent(self, event):
         self.parent().close()

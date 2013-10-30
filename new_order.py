@@ -1,10 +1,11 @@
 from PyQt4 import QtCore, QtGui, QtSql, uic
 from function import LineCalendar, get_address, get_addresses, NewAddress
-from dbConnection import dbErr
+from dbConnection import db_err
 import os
 
 
 class NewOrder(QtGui.QDialog):
+    cid = None
 
     def __init__(self, parent=None):
         def connections():
@@ -42,7 +43,7 @@ class NewOrder(QtGui.QDialog):
             self.customer.setModel(mod)
             return True
         else:
-            dbErr(qry)
+            db_err(qry)
             QtGui.QMessageBox.critical(None, "Fatal Error", "Failed to load customers from database. Aborting!")
             return False
 
@@ -53,10 +54,10 @@ class NewOrder(QtGui.QDialog):
             self.tabs.setEnabled(False)
 
         mod = self.customer.model()
-        self.customer = mod.data(mod.index(index, 1)).toString()
+        self.cid = mod.data(mod.index(index, 1)).toString()
         self.s_address1.clear()
         self.b_address1.clear()
-        addresses = get_addresses(self.customer)
+        addresses = get_addresses(self.cid)
         self.s_address1.addItems(addresses)
         self.b_address1.addItems(addresses)
         self.s_address1.setCurrentIndex(0)
@@ -72,12 +73,12 @@ class NewOrder(QtGui.QDialog):
                 return False
             self.s_address1.clear()
             self.b_address1.clear()
-            addresses = get_addresses(self.customer)
+            addresses = get_addresses(self.cid)
             self.s_address1.addItems(addresses)
             self.b_address1.addItems(addresses)
             self.s_address1.setCurrentIndex(self.s_address1.findText(stat))
             return
-        address = get_address(self.customer, address)
+        address = get_address(self.cid, address)
         if sender.objectName() == "s_address1":
             self.s_address2.setText(address[1])
             self.s_city.setText(address[2])
@@ -103,11 +104,11 @@ class NewOrder(QtGui.QDialog):
         qry = QtSql.QSqlQuery()
         data = ("Insert into customer_addresses (id, cid, address1, address2, city, state, zip) Values((select max(id) "
                 "from customer_addresses as s where cid = '{0}')+1, '{0}', '{1}', '{2}', '{3}', '{4}', '{5}')"
-                ).format(self.customer, *address)
+                ).format(self.cid, *address)
         if qry.exec_(data):
             return address[0]
         else:
-            dbErr(qry)
+            db_err(qry)
             return False
 
     def get_data(self):
@@ -130,26 +131,32 @@ class NewOrder(QtGui.QDialog):
             self.priority_slider.setValue(int(value))
 
     def insert_new_order(self):
-        values = [self.customer]
+        values = [self.cid]
         qry = QtSql.QSqlQuery()
         address = self.s_address1.currentText()
         data = ("Select id from customer_addresses where cid={0} and address1='{1}'"
-                ).format(self.customer, address)
+                ).format(self.cid, address)
         if qry.exec_(data):
             if qry.first():
                 s_aid = qry.value(0).toString()
             else:
                 QtGui.QMessageBox.critical(None, "Database Error", "Couldn't find address like %s" % address)
                 return False
+        else:
+            db_err(qry)
+            return False
         address = self.b_address1.currentText()
         data = ("Select id from customer_addresses where cid={0} and address1='{1}'"
-                ).format(self.customer, address)
+                ).format(self.cid, address)
         if qry.exec_(data):
             if qry.first():
                 b_aid = qry.value(0).toString()
             else:
                 QtGui.QMessageBox.critical(None, "Database Error", "Couldn't find address like %s" % address)
                 return False
+        else:
+            db_err(qry)
+            return False
         values.append(s_aid)
         values.append(b_aid)
         values.append(self.po_number.text())
@@ -183,15 +190,15 @@ class NewOrder(QtGui.QDialog):
                     else:
                         print data
                         trans.rollback()
-                        dbErr(trans_qry)
+                        db_err(trans_qry)
                 else:
                     print data
                     trans.rollback()
-                    dbErr(trans_qry)
+                    db_err(trans_qry)
             else:
                 print data
                 trans.rollback()
-                dbErr(trans_qry)
+                db_err(trans_qry)
         else:
-            dbErr(trans)
+            db_err(trans)
             QtGui.QMessageBox.critical(None, "Transaction Error", "There was an error starting the transaction")
