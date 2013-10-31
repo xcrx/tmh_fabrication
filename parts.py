@@ -1,4 +1,3 @@
-__author__ = 'rhanson'
 import os
 from PyQt4 import QtCore, QtGui, QtSql, uic
 from new_part import NewPart

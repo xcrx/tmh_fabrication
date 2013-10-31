@@ -1,7 +1,7 @@
 import sys
 import os
 
-from PyQt4 import QtGui, QtCore, uic
+from PyQt4 import QtGui, QtCore, QtSql, uic
 from orders import Orders
 from order import Order
 from parts import Parts
@@ -78,11 +78,13 @@ class Main(QtGui.QMainWindow):
     def view_part(self, pid):
         part, ok = self.new_sub_window(Part, args=pid)
         if ok:
-            part_widget = self.part.widget()
+            part_widget = part.widget()
             part_widget.goToPart.connect(self.view_part)
             part_widget.goToOrder.connect(self.view_order)
 
     def closeEvent(self, event):
+        QtSql.QSqlDatabase.database('qt_sql_default_connection').close()
+        QtSql.QSqlDatabase.removeDatabase('qt_sql_default_connection')
         TMHSettings().write("size", self.size())
         TMHSettings().write("pos", self.pos())
         event.accept()

@@ -1,6 +1,7 @@
 from PyQt4 import QtGui, QtCore, QtSql, uic
 import os
 import us
+import pyzipcode
 from dbConnection import db_err
 
 
@@ -61,7 +62,6 @@ class LineCalendar(QtGui.QLineEdit):
         self.cal.hide()
 
 
-#TODO: Create similar to lookup city and state by zip
 def load_states():
     states = []
     for state in us.STATES:
@@ -69,6 +69,17 @@ def load_states():
     comp = QtGui.QCompleter(states)
     comp.setCaseSensitivity(0)
     return comp
+
+
+def zip_lookup(zipcode):
+    zip_db = pyzipcode.ZipCodeDatabase()
+    try:
+        zip_data = zip_db[zipcode]
+    except IndexError:
+        return False, False
+    city = zip_data.city
+    state = zip_data.state
+    return city, state
 
 
 def get_addresses(cid):
@@ -123,6 +134,15 @@ class NewAddress(QtGui.QDialog):
         self.cid = cid
         self.button_cancel.clicked.connect(self.reject)
         self.button_accept.clicked.connect(self.accept)
+        self.zipcode.textEdited.connect(self.get_zip_data)
+
+    def get_zip_data(self, zipcode):
+        city, state = zip_lookup(zipcode)
+        if city and state:
+            if self.city.text() == "":
+                self.city.setText(city)
+            if self.state.text() == "":
+                self.state.setText(state)
 
     def get_data(self):
         ok = self.exec_()

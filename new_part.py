@@ -1,4 +1,5 @@
 from PyQt4 import QtCore, QtGui, QtSql, uic
+import os
 
 
 class NewPart(QtGui.QDialog):
@@ -8,7 +9,7 @@ class NewPart(QtGui.QDialog):
             pass
 
         QtGui.QDialog.__init__(self, parent)
-        #uic.loadUi(os.path.split(__file__)[0] + '/ui/new_part.ui', self)
+        uic.loadUi(os.path.split(__file__)[0] + '/ui/new_part.ui', self)
         connections()
 
     def get_data(self):

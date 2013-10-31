@@ -1,7 +1,6 @@
 import os
 from PyQt4 import QtCore, QtGui, QtSql, uic
 from dbConnection import db_err
-#TODO: Set up connections
 #TODO: Save edits
 
 
@@ -13,12 +12,13 @@ class Part(QtGui.QWidget):
         self.pid = pid
 
         def connections():
-            pass
+            self.table_orders.doubleClicked.connect(self.go_to_order)
+            self.table_bom.doubleClicked.connect(self.bom_functions)
 
         QtGui.QWidget.__init__(self, parent)
         uic.loadUi(os.path.split(__file__)[0] + '/ui/part.ui', self)
 
-        if not self.load_part:
+        if not self.load_part():
             self.close()
         if not self.load_drawing():
             pass
@@ -32,7 +32,6 @@ class Part(QtGui.QWidget):
         title = "%s (%s)" % (self.part_number.text(), self.pid)
         self.setWindowTitle(title)
 
-    @property
     def load_part(self):
         qry = QtSql.QSqlQuery()
         data = "Select * from view_parts where `Part ID` = '%s'" % self.pid
@@ -60,10 +59,9 @@ class Part(QtGui.QWidget):
     def load_drawing(self):
         return True
 
-    #TODO: Change to new view to show order data instead of part data
     def load_orders(self):
         qry = QtSql.QSqlQuery()
-        data = "Select * from view_items where Part = '%s'" % self.part_number.text()
+        data = "Select * from view_part_orders where Part = '%s'" % self.part_number.text()
         if qry.exec_(data):
             mod = QtSql.QSqlQueryModel()
             mod.setQuery(qry)
@@ -86,3 +84,21 @@ class Part(QtGui.QWidget):
         else:
             db_err(qry)
             return False
+
+    def go_to_order(self, index):
+        mod = index.model()
+        oid = mod.data(mod.index(index.row(), mod.columnCount()-2)).toString()
+        self.goToOrder.emit(oid)
+
+    def bom_functions(self, index):
+        mod = index.model()
+        row = index.row()
+        col = index.column()
+        if col == 1:
+            cur_quantity = mod.data(index).toString()
+            new_quantity, ok = QtGui.QInputDialog.getInt(None, "New Quantity", "", int(cur_quantity))
+            print ok
+            if ok:
+                print cur_quantity, new_quantity
+        else:
+            self.goToPart.emit(mod.data(mod.index(row, mod.columnCount()-2)).toString())
