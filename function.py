@@ -82,6 +82,20 @@ def zip_lookup(zipcode):
     return city, state
 
 
+def load_materials():
+    materials = []
+    qry = QtSql.QSqlQuery()
+    data = "Select name from materials order by name"
+    if qry.exec_(data):
+        while qry.next():
+            materials.append(qry.value(0).toString())
+    else:
+        db_err(qry)
+    comp = QtGui.QCompleter(materials)
+    comp.setCaseSensitivity(0)
+    return comp
+
+
 def get_addresses(cid):
     qry = QtSql.QSqlQuery()
     data = "Select address1, id from customer_addresses where cid=%s" % cid

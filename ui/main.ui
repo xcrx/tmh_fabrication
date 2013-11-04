@@ -33,6 +33,7 @@
     </item>
    </layout>
   </widget>
+  <widget class="QStatusBar" name="statusBar"/>
   <action name="action_orders">
    <property name="text">
     <string>Orders</string>

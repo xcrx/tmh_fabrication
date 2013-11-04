@@ -189,16 +189,22 @@ class NewOrder(QtGui.QDialog):
                             QtGui.QMessageBox.critical(None, "Commit Error", text)
                     else:
                         print data
-                        trans.rollback()
                         db_err(trans_qry)
+                        del trans_qry
+                        trans.rollback()
+
                 else:
                     print data
-                    trans.rollback()
                     db_err(trans_qry)
+                    del trans_qry
+                    trans.rollback()
+
             else:
                 print data
-                trans.rollback()
                 db_err(trans_qry)
+                del trans_qry
+                trans.rollback()
+
         else:
             db_err(trans)
             QtGui.QMessageBox.critical(None, "Transaction Error", "There was an error starting the transaction")
