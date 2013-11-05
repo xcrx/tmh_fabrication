@@ -1,4 +1,7 @@
 from PyQt4 import QtCore, QtGui, QtSql
+#TODO: Move all db variables to config file
+#TODO: Encrypt db password
+#TODO: Add idle check
 
 
 def default_connection():
@@ -21,7 +24,8 @@ def default_connection():
 
 
 def db_err(qry=None):
-    """This error is used extensively.
+    """
+    This error is used extensively.
     """
     if qry is None:
         QtGui.QMessageBox.critical(None, "Database Error", "An unknown error occurred")

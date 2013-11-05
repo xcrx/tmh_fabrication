@@ -1,6 +1,9 @@
 import os
 from PyQt4 import QtCore, QtGui, QtSql, uic
 from new_part import NewPart
+#TODO: New Part
+#TODO: Edit stock and cost
+#TODO: Print list W/ current filter
 
 
 class Parts(QtGui.QWidget):

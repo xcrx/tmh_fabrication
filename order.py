@@ -2,6 +2,8 @@ import os
 from PyQt4 import QtCore, QtGui, QtSql, uic
 from dbConnection import db_err
 import function
+#TODO: Reports
+#TODO: Money stuff
 
 
 class Order(QtGui.QWidget):
@@ -23,6 +25,9 @@ class Order(QtGui.QWidget):
             self.processing.clicked.connect(self.set_processing)
             self.add_part.clicked.connect(self.add_part_)
             self.table_items.doubleClicked.connect(self.item_functions)
+            self.priority_digit.textChanged.connect(self.update_slider)
+            self.priority_digit.textEdited.connect(self.data_edited)
+            self.priority_slider.sliderMoved.connect(self.update_digit)
 
         QtGui.QWidget.__init__(self, parent)
         uic.loadUi(os.path.split(__file__)[0] + '/ui/order.ui', self)
@@ -60,6 +65,7 @@ class Order(QtGui.QWidget):
                 self.notes.setPlainText(values[5])
                 self.discount.setText(values[6])
                 self.customer.setText(values[7])
+                self.priority_digit.setText(values[8])
                 if values[4] == '0':
                     self.processing.setChecked(False)
                 else:
@@ -210,7 +216,7 @@ class Order(QtGui.QWidget):
         iid = record.value("id").toString()
         oid = self.order_id.text()
         old_qty = record.value("Ordered").toString()
-        new_qty, ok = QtGui.QInputDialog.getInt(None, "Quantity", "", int(old_qty))
+        new_qty, ok = QtGui.QInputDialog.getInt(None, "Quantity", "Quantity", int(old_qty))
         if ok and new_qty != old_qty:
             qry = QtSql.QSqlQuery()
             data = "Update items set quantity=%d where id=%s" % (new_qty, iid)
@@ -223,7 +229,7 @@ class Order(QtGui.QWidget):
         iid = record.value("id").toString()
         oid = self.order_id.text()
         old_status = record.value("Status").toString()
-        new_status, ok = QtGui.QInputDialog.getText(None, "New Status", "")
+        new_status, ok = QtGui.QInputDialog.getText(None, "New Status", "New Status")
         if ok and new_status != old_status:
             qry = QtSql.QSqlQuery()
             data = "Insert into item_status (iid, status) VALUES(%s,'%s')" % (iid, new_status)
@@ -236,7 +242,7 @@ class Order(QtGui.QWidget):
         iid = record.value("id").toString()
         oid = self.order_id.text()
         old_stock = record.value("Stock").toString()
-        new_stock, ok = QtGui.QInputDialog.getInt(None, "Stock Quantity", "", int(old_stock))
+        new_stock, ok = QtGui.QInputDialog.getInt(None, "Stock Quantity", "Stock Quantity", int(old_stock))
         if ok and new_stock != old_stock:
             qry = QtSql.QSqlQuery()
             data = "Select pid from items where id=%s" % iid
@@ -259,7 +265,7 @@ class Order(QtGui.QWidget):
         iid = record.value("id").toString()
         oid = self.order_id.text()
         old_desc = record.value("Description").toString()
-        new_desc, ok = QtGui.QInputDialog.getText(None, "Description", "", 0, old_desc)
+        new_desc, ok = QtGui.QInputDialog.getText(None, "Description", "Description", 0, old_desc)
         if ok and new_desc != old_desc:
             qry = QtSql.QSqlQuery()
             data = "Select pid from items where id=%s" % iid
@@ -291,7 +297,7 @@ class Order(QtGui.QWidget):
         else:
             db_err(qry)
             return False
-        new_material, ok = QtGui.QInputDialog.getItem(None, "Material", "", materials)
+        new_material, ok = QtGui.QInputDialog.getItem(None, "Material", "Material", materials)
         if ok and new_material != old_material:
             data = "Select pid from items where id=%s" % iid
             if qry.exec_(data):
@@ -318,6 +324,15 @@ class Order(QtGui.QWidget):
                 self.load_items(oid)
             else:
                 db_err(qry)
+
+    def update_digit(self, value):
+        if self.priority_digit.text() != str(value):
+            self.priority_digit.setText(str(value))
+            self.priority_digit.textEdited.emit(str(value))
+
+    def update_slider(self, value):
+        if str(self.priority_slider.value()) != value and value != "":
+            self.priority_slider.setValue(int(value))
 
     def parts_completer(self):
         qry = QtSql.QSqlQuery()
@@ -347,14 +362,14 @@ class Order(QtGui.QWidget):
                 db_err(qry)
     
     def order_delete(self):
-        id = self.order_id.text()
-        confirm = QtGui.QMessageBox.question(self, "Confirm Delete", "Are you sure you want to delete order %s?" % id,
+        oid = self.order_id.text()
+        confirm = QtGui.QMessageBox.question(self, "Confirm Delete", "Are you sure you want to delete order %s?" % oid,
                                              "No", "Yes", defaultButtonNumber=1, escapeButtonNumber=0)
         if confirm == 1:
-            data = "Delete from orders where id = %s" % id
+            data = "Delete from orders where id = %s" % oid
             qry = QtSql.QSqlQuery()
             if qry.exec_(data):
-                text = "{0} was deleted".format(id)
+                text = "{0} was deleted".format(oid)
                 QtGui.QMessageBox.information(None, "Finished", text)
                 self.update_data.emit()
                 self.close()
@@ -371,7 +386,7 @@ class Order(QtGui.QWidget):
         data = "Select id from parts where part='%s'" % part
         if qry.exec_(data):
             if qry.first():
-                qty, ok = QtGui.QInputDialog.getInt(self, "Quantity", "", 1)
+                qty, ok = QtGui.QInputDialog.getInt(self, "Quantity", "Quantity", 1)
                 if ok and qty > 0:
                     pid = qry.value(0).toString()
                     data = "Insert into items (oid, pid, quantity) VALUES(%s,%s,%s)" % (oid, pid, qty)
@@ -394,18 +409,20 @@ class Order(QtGui.QWidget):
             processing = -1
         else:
             processing = 0
-        id = self.order_id.text()
+        oid = self.order_id.text()
         qry = QtSql.QSqlQuery()
-        data = "Update orders_status set processing={0} where oid={1}".format(processing, id)
+        data = "Update orders_status set processing={0} where oid={1}".format(processing, oid)
         if qry.exec_(data):
-            self.load_order(id)
+            self.load_order(oid)
         else:
             db_err(qry)
 
     def data_edited(self):
         data_map = [["discount", "orders_discount", "cost", "oid"],
-               ["due_date", "orders", "ddate", "id"],
-               ["po_number", "orders", "po", "id"], ]
+                    ["due_date", "orders", "ddate", "id"],
+                    ["po_number", "orders", "po", "id"],
+                    ["priority_digit", "orders_status", "priority", "oid"],
+                    ]
         
         oid = self.order_id.text()
         
@@ -437,6 +454,7 @@ class Order(QtGui.QWidget):
         event.accept()
             
     def closeEvent(self, event):
-        self.toolbar1.close()
+        if self.toolbar1 is not None:
+            self.toolbar1.close()
         del self.toolbar1
         event.accept()

@@ -8,9 +8,9 @@ from parts import Parts
 from part import Part
 from dbConnection import default_connection
 from function import TMHSettings
+#TODO: make tables sortable
 
 
-#noinspection PyCallByClass
 class Main(QtGui.QMainWindow):
     def __init__(self, parent=None):
         self.toolbar1 = QtGui.QToolBar('Files')

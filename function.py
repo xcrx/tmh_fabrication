@@ -112,7 +112,7 @@ def get_addresses(cid):
 
 def get_part_id(part_num):
     qry = QtSql.QSqlQuery()
-    data = "Select id from parts where partt = '%s'" % part_num
+    data = "Select id from parts where part = '%s'" % part_num
     if qry.exec_(data):
         if qry.first():
             return qry.value(0).toString()

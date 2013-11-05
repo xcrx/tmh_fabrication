@@ -2,6 +2,21 @@ import os
 from PyQt4 import QtCore, QtGui, QtSql, uic
 from dbConnection import db_err
 import function
+#TODO: BOM functions
+    #Add
+    #Remove
+    #Change Quantity
+#TODO: Edit quantities and status
+#TODO: Set up drawing functions
+    #Format?
+    #Load
+    #Display
+    #Change
+#TODO: Reports
+    #Basic info
+    #Extended info
+    #BOM
+    #Order History
 
 
 class Part(QtGui.QWidget):
@@ -68,7 +83,6 @@ class Part(QtGui.QWidget):
             db_err(qry)
             return False
 
-    #TODO: What do about drawings??
     def load_drawing(self):
         return True
 
@@ -178,7 +192,7 @@ class Part(QtGui.QWidget):
         col = index.column()
         if col == 1:
             cur_quantity = mod.data(index).toString()
-            new_quantity, ok = QtGui.QInputDialog.getInt(None, "New Quantity", "", int(cur_quantity))
+            new_quantity, ok = QtGui.QInputDialog.getInt(None, "New Quantity", "New Quantity", int(cur_quantity))
             print ok
             if ok:
                 print cur_quantity, new_quantity

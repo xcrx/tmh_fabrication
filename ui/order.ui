@@ -117,10 +117,13 @@
             </size>
            </property>
            <property name="inputMask">
-            <string/>
+            <string>###; </string>
            </property>
            <property name="text">
             <string/>
+           </property>
+           <property name="maxLength">
+            <number>3</number>
            </property>
            <property name="frame">
             <bool>false</bool>
@@ -495,8 +498,6 @@
     <string>Ctrl+`</string>
    </property>
   </action>
-  <zorder>table_items</zorder>
-  <zorder>priority_digit</zorder>
  </widget>
  <resources/>
  <connections/>

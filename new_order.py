@@ -2,6 +2,7 @@ from PyQt4 import QtCore, QtGui, QtSql, uic
 from function import LineCalendar, get_address, get_addresses, NewAddress
 from dbConnection import db_err
 import os
+#FIXME: look at data check when submitting a new order
 
 
 class NewOrder(QtGui.QDialog):
@@ -58,8 +59,11 @@ class NewOrder(QtGui.QDialog):
         self.s_address1.clear()
         self.b_address1.clear()
         addresses = get_addresses(self.cid)
-        self.s_address1.addItems(addresses)
-        self.b_address1.addItems(addresses)
+        address = []
+        for a in addresses:
+            address.append(a[0])
+        self.s_address1.addItems(address)
+        self.b_address1.addItems(address)
         self.s_address1.setCurrentIndex(0)
         self.b_address1.setCurrentIndex(0)
 
