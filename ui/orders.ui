@@ -14,15 +14,28 @@
    <string>Orders</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="1">
-    <widget class="QLabel" name="filter_label">
-     <property name="text">
-      <string>Filter:</string>
+   <item row="0" column="2">
+    <widget class="QLineEdit" name="filter">
+     <property name="minimumSize">
+      <size>
+       <width>150</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>150</width>
+       <height>16777215</height>
+      </size>
      </property>
     </widget>
    </item>
-   <item row="1" column="0" colspan="4">
-    <widget class="QTableView" name="table_orders"/>
+   <item row="0" column="0">
+    <widget class="QPushButton" name="button_new_order">
+     <property name="text">
+      <string>New Order</string>
+     </property>
+    </widget>
    </item>
    <item row="0" column="3">
     <spacer name="horizontalSpacer">
@@ -37,26 +50,20 @@
      </property>
     </spacer>
    </item>
-   <item row="0" column="0">
-    <widget class="QPushButton" name="button_new_order">
+   <item row="0" column="1">
+    <widget class="QLabel" name="filter_label">
      <property name="text">
-      <string>New Order</string>
+      <string>Filter:</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="2">
-    <widget class="QLineEdit" name="filter">
-     <property name="minimumSize">
-      <size>
-       <width>150</width>
-       <height>0</height>
-      </size>
+   <item row="1" column="0" colspan="4">
+    <widget class="QFrame" name="placeholder">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
      </property>
-     <property name="maximumSize">
-      <size>
-       <width>150</width>
-       <height>16777215</height>
-      </size>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
      </property>
     </widget>
    </item>

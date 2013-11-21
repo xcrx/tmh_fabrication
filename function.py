@@ -1,6 +1,7 @@
 from PyQt4 import QtGui, QtCore, QtSql, uic
 import os
 import us
+import re
 import pyzipcode
 from dbConnection import db_err
 
@@ -214,3 +215,24 @@ class TMHSettings(QtCore.QSettings):
         elif stat == 2:
             QtGui.QMessageBox.critical(None, "Format Error", "INI file appears to be corrupt. :(")
             return False
+
+
+class SortableTable(QtGui.QTableView):
+    def __init__(self, parent=None):
+        QtGui.QTableView.__init__(self, parent)
+        self.horizontalHeader().sortIndicatorChanged.connect(self.sort_table)
+
+    def sort_table(self, index, order):
+        if order:
+            order = " Desc"
+        else:
+            order = " Asc"
+        mod = self.model()
+        column = mod.headerData(index, 1).toString()
+        data = mod.query().lastQuery()
+        if "ORDER BY" in data:
+            data = re.sub("ORDER BY .*", "ORDER BY `%s` %s" % (column, order), str(data), 99)
+        else:
+            data += " ORDER BY `%s` %s" % (column, order)
+        mod.setQuery(data)
+        mod.query().exec_()

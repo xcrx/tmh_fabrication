@@ -1,6 +1,5 @@
 import sys
 import os
-
 from PyQt4 import QtGui, QtCore, QtSql, uic
 from orders import Orders
 from order import Order
@@ -28,8 +27,8 @@ class Main(QtGui.QMainWindow):
         
     def create_actions(self):
         self.toolbar1.addActions([self.action_orders, self.action_parts,
-                                  self.action_customers, self.action_materials]
-                                 )
+                                  self.action_customers, self.action_materials,
+                                  ])
         
         self.addToolBar(self.toolbar1)
 

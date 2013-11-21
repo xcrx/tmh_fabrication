@@ -1,8 +1,8 @@
 import os
 from PyQt4 import QtCore, QtGui, QtSql, uic
 from new_part import NewPart
+from dbConnection import db_err
 #TODO: New Part
-#TODO: Edit stock and cost
 #TODO: Print list W/ current filter
 
 
@@ -55,6 +55,30 @@ class Parts(QtGui.QWidget):
     def go_to_part(self, index):
         mod = index.model()
         row = index.row()
-        col = mod.columnCount()-1
-        pid = int(mod.data(mod.index(row, col)).toString())
-        self.goToPart.emit(pid)
+        col = index.column()
+        pid_col = mod.columnCount()-1
+        pid = int(mod.data(mod.index(row, pid_col)).toString())
+        if col == 1:
+            old_stock = int(mod.data(mod.index(row, col)).toString())
+            new_stock, ok = QtGui.QInputDialog.getInt(None, "New Quantity", "New Quantity", old_stock)
+            if ok:
+                update = "Update parts_detail set stock=%d where pid=%d" % (new_stock, pid)
+                qry = QtSql.QSqlQuery()
+                if qry.exec_(update):
+                    mod.query().exec_()
+                    QtGui.QMessageBox.information(None, "Successful", "Stock updated successfully")
+                else:
+                    db_err(qry)
+        elif col == 5:
+            old_cost = mod.data(mod.index(row, col)).toString()
+            new_cost, ok = QtGui.QInputDialog.getText(None, "New Price", "New Price", 0, old_cost)
+            if ok:
+                update = "Update parts_detail set cost=%s where pid=%d" % (new_cost, pid)
+                qry = QtSql.QSqlQuery()
+                if qry.exec_(update):
+                    mod.query().exec_()
+                    QtGui.QMessageBox.information(None, "Successful", "Price updated successfully")
+                else:
+                    db_err(qry)
+        else:
+            self.goToPart.emit(pid)

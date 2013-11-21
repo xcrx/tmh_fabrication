@@ -2,7 +2,6 @@ from PyQt4 import QtCore, QtGui, QtSql, uic
 from function import LineCalendar, get_address, get_addresses, NewAddress
 from dbConnection import db_err
 import os
-#FIXME: look at data check when submitting a new order
 
 
 class NewOrder(QtGui.QDialog):
@@ -138,6 +137,9 @@ class NewOrder(QtGui.QDialog):
         values = [self.cid]
         qry = QtSql.QSqlQuery()
         address = self.s_address1.currentText()
+        if address == "":
+            QtGui.QMessageBox.critical(None, "Incomplete Data", "You must fill out all required data!")
+            return False
         data = ("Select id from customer_addresses where cid={0} and address1='{1}'"
                 ).format(self.cid, address)
         if qry.exec_(data):
@@ -150,6 +152,9 @@ class NewOrder(QtGui.QDialog):
             db_err(qry)
             return False
         address = self.b_address1.currentText()
+        if address == "":
+            QtGui.QMessageBox.critical(None, "Incomplete Data", "You must fill out all required data!")
+            return False
         data = ("Select id from customer_addresses where cid={0} and address1='{1}'"
                 ).format(self.cid, address)
         if qry.exec_(data):

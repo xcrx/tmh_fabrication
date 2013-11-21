@@ -1,6 +1,7 @@
 import os
 from PyQt4 import QtCore, QtGui, QtSql, uic
 from new_order import NewOrder
+from function import SortableTable
 
 
 class Orders(QtGui.QWidget):
@@ -14,6 +15,9 @@ class Orders(QtGui.QWidget):
 
         QtGui.QWidget.__init__(self, parent)
         uic.loadUi(os.path.split(__file__)[0] + '/ui/orders.ui', self)
+        self.placeholder.setParent(None)
+        self.table_orders = SortableTable(self)
+        self.layout().addWidget(self.table_orders, 0, 0, 1, 4)
         connections()
         self.load_orders()
         
@@ -53,5 +57,5 @@ class Orders(QtGui.QWidget):
         mod = index.model()
         row = index.row()
         col = mod.columnCount()-1
-        id = int(mod.data(mod.index(row, col)).toString())
-        self.goToOrder.emit(id)
+        oid = int(mod.data(mod.index(row, col)).toString())
+        self.goToOrder.emit(oid)
